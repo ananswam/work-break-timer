@@ -22,6 +22,7 @@ function App() {
   const [isAlarmPlaying, setIsAlarmPlaying] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const timerRef = useRef(null);
+  const [not, setNot] = useState(false);
 
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -32,7 +33,15 @@ function App() {
             setIsRunning(false);
             playAlarm();
             showExercise();
-            return 0;
+            if (not) {
+              const notification = new Notification("Work Break!");
+              notification.onclick = function() {
+                // Close the notification
+                this.close();
+                resetTimer();
+                window.focus();
+              };
+            }
           }
           return prevTime - 1;
         });
@@ -197,6 +206,35 @@ function App() {
           </Grid>
         </Grid>
         <Collapse in={showConfig}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={not}
+                onChange={(e) => {
+                  if(e.target.checked) {
+                    if (!('Notification' in window)) {
+                      console.log('no notifications');
+                      setNot(false);
+                    } else {
+                      Notification.requestPermission().then(permission => {
+                        console.log('Permission: ' + permission);
+                        if (permission != 'granted') {
+                          setNot(false);
+                        } else {
+                          setNot(true);
+                        }
+                      });
+                    }
+                  } else {
+                    setNot(false);
+                  }
+                }}
+                name="randomExercises"
+                color="primary"
+              />
+            }
+            label="Notify"
+          />
           <TextField
             label="Exercises (one per line)"
             multiline
